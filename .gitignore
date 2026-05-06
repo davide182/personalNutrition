@@ -1,0 +1,51 @@
+# Java / Spring Boot
+target/
+*.class
+*.jar
+*.war
+.mvn/
+mvnw
+mvnw.cmd
+.idea/
+*.iml
+
+# Python / Flask
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+env/
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Node / React
+node_modules/
+dist/
+build/
+.npm
+.vite/
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.sql.bak
+
+# Logs
+*.log
+logs/
+
+# Variabili ambiente (segreti!)
+.env
+.env.local
+.env.*.local
+
+# Docker
+.docker/
