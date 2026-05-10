@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Database principale PostgreSQL
+  postgres:
+    image: postgres:16
+    container_name: nutritionists_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nutritionists_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Database log MongoDB
+  mongodb:
+    image: mongo:7
+    container_name: nutritionists_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - nutritionists_network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Volumi persistenti per i dati
+volumes:
+  postgres_data:
+    name: nutritionists_postgres_data
+  mongodb_data:
+    name: nutritionists_mongodb_data
+
+# Rete condivisa tra i container
+networks:
+  nutritionists_network:
+    name: nutritionists_network
+    driver: bridge
