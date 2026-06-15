@@ -2,6 +2,10 @@ package com.nutritionists.model.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.nutritionists.model.entity.enums.Role;
+import com.nutritionists.model.entity.enums.UserStatus;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,15 +20,16 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @NoArgsConstructor
 @AllArgsConstructor
-@Data //getter, setter, tostring, equals, hashcode
-
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 @Builder
@@ -47,20 +52,32 @@ public class User {
     @NotNull
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status;
+
     @Column(nullable = false)
     @NotNull
     private LocalDateTime createdAtUser;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private UserProfile userProfile;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private PatientHealthData patientHealthData;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
     private Nutritionist nutritionist;
 
-    @PrePersist //Metodo chiamato prima di salvare l'entità
+    @Column(unique = true)
+    private String resetToken;
+
+    private LocalDateTime resetTokenExpiry;
+
+    @PrePersist
     protected void onCreate() {
         createdAtUser = LocalDateTime.now();
     }

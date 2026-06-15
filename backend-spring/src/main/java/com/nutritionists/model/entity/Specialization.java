@@ -3,6 +3,8 @@ package com.nutritionists.model.entity;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,13 +32,14 @@ public class Specialization {
     private Long specializationId;
 
     @Column(nullable = false)
-    @NotEmpty //NotBlank potrebbe andare
+    @NotEmpty 
     private String name;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @ManyToMany(mappedBy = "specializations")
+    @JsonIgnore
     @Builder.Default
     private Set<Nutritionist> nutritionists = new HashSet<>();
 }

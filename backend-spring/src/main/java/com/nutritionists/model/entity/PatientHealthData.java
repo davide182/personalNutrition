@@ -39,7 +39,7 @@ public class PatientHealthData {
     @NotNull
     private Double height;
 
-    @Column(columnDefinition = "TEXT") // usato per testo
+    @Column(columnDefinition = "TEXT") 
     private String allergies;
 
     @Column(columnDefinition = "TEXT")

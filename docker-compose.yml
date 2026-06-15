@@ -1,15 +1,12 @@
-version: '3.8'
-
 services:
-  # Database principale PostgreSQL
   postgres:
     image: postgres:16
     container_name: nutritionists_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-nutritionists_db}
     ports:
       - "5433:5432"
     volumes:
@@ -17,12 +14,11 @@ services:
     networks:
       - nutritionists_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Database log MongoDB
   mongodb:
     image: mongo:7
     container_name: nutritionists_mongodb
@@ -39,14 +35,47 @@ services:
       timeout: 5s
       retries: 5
 
-# Volumi persistenti per i dati
+  spring-backend:
+    build:
+      context: ./backend-spring
+      dockerfile: Dockerfile
+    container_name: nutritionists_spring
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nutritionists_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/nutritionists_logs
+      FLASK_API_URL: http://flask-backend:5000
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    networks:
+      - nutritionists_network
+
+  flask-backend:
+    build:
+      context: ./backend-flask
+      dockerfile: Dockerfile
+    container_name: nutritionists_flask
+    restart: unless-stopped
+    environment:
+      ORS_API_KEY: ${ORS_API_KEY:-}
+    ports:
+      - "5000:5000"
+    networks:
+      - nutritionists_network
+
 volumes:
   postgres_data:
     name: nutritionists_postgres_data
   mongodb_data:
     name: nutritionists_mongodb_data
 
-# Rete condivisa tra i container
 networks:
   nutritionists_network:
     name: nutritionists_network

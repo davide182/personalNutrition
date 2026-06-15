@@ -1,0 +1,87 @@
+# .github/workflows/cd.yml
+name: CD - Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Permette esecuzione manuale
+
+env:
+  REGISTRY: ghcr.io  # GitHub Container Registry
+  IMAGE_NAME_BACKEND: ${{ github.repository }}-backend
+  IMAGE_NAME_FLASK: ${{ github.repository }}-flask
+  IMAGE_NAME_FRONTEND: ${{ github.repository }}-frontend
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Login al Container Registry
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build e push Spring Backend
+      - name: Build and push Spring Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend-spring
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
+
+      # Build e push Flask Backend
+      - name: Build and push Flask Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend-flask
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FLASK }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FLASK }}:${{ github.sha }}
+
+      # Build e push Frontend
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend-react
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
+
+      # Deploy via SSH
+      - name: Deploy to Production Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /opt/nutritionists
+            
+            # Crea file .env se non esiste
+            if [ ! -f .env ]; then
+              cp .env.example .env
+            fi
+            
+            # Aggiorna le immagini
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FLASK }}:latest
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
+            
+            # Ricarica i container
+            docker-compose down
+            docker-compose up -d
+            
+            # Pulisci immagini vecchie
+            docker image prune -f

@@ -2,6 +2,9 @@ package com.nutritionists.model.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.nutritionists.model.entity.enums.AppointmentStatus;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,10 +37,12 @@ public class Appointment {
 
     @JoinColumn(name = "userId", nullable = false)
     @ManyToOne
+    @JsonIgnore 
     private User user;
 
-    @JoinColumn(name = "nutritionistId", nullable = false)
+    @JoinColumn(name = "nutritionist_id", nullable = true)
     @ManyToOne
+    @JsonIgnore  
     private Nutritionist nutritionist;
 
     @Column(nullable = false)
@@ -51,5 +56,12 @@ public class Appointment {
     private AppointmentStatus status;
     
     @OneToOne(mappedBy = "appointment", cascade = CascadeType.ALL)
+    @JsonIgnore 
     private NutritionalPlan nutritionalPlan;
+
+    @Column(nullable = true)
+    private Double price;
+
+    @Column(nullable = true)
+    private String location;
 }

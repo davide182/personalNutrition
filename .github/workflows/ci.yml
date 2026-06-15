@@ -1,0 +1,47 @@
+# .github/workflows/cd-demo.yml
+name: CD - Demo (No actual deployment)
+
+on:
+  workflow_dispatch:  # Solo esecuzione manuale
+  push:
+    branches: [main, master]
+
+jobs:
+  cd-demo:
+    name: CD Pipeline Demo
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 📦 Build all images
+        run: |
+          cd backend-spring && docker build -t demo-backend .
+          cd ../backend-flask && docker build -t demo-flask .
+          cd ../frontend-react && docker build -t demo-frontend .
+          
+      - name: 🧪 Run container test (dry-run)
+        run: |
+          echo "✅ Build completata con successo!"
+          echo "📊 Statistiche:"
+          echo "   - Backend Spring: $(docker images demo-backend --format '{{.Size}}')"
+          echo "   - Flask: $(docker images demo-flask --format '{{.Size}}')"
+          echo "   - Frontend: $(docker images demo-frontend --format '{{.Size}}')"
+
+      - name: 📝 Log deployment (simulato)
+        run: |
+          echo "========================================="
+          echo "🚀 SIMULAZIONE DEPLOYMENT"
+          echo "========================================="
+          echo "📅 Data: $(date)"
+          echo "🌿 Branch: ${{ github.ref_name }}"
+          echo "📦 Commit: ${{ github.sha }}"
+          echo ""
+          echo "🔧 In un ambiente reale, qui avverrebbe:"
+          echo "   1. Push delle immagini su Docker Registry"
+          echo "   2. Connessione SSH al server di produzione"
+          echo "   3. Esecuzione di docker-compose pull && up -d"
+          echo "========================================="
+
+      - name: ✅ Completion
+        run: echo "🎉 CD Pipeline Demo completata con successo!"
