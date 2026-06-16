@@ -76,7 +76,7 @@ jobs:
 
       - name: Build Frontend Image
         run: |
-          cd frontend-react
+          cd frontend   # <--- QUI LA MODIFICA
           docker build -t nutritionists-frontend:latest .
 
       - name: Verify images built successfully
