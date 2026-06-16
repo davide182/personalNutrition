@@ -1,87 +1,46 @@
-# .github/workflows/cd.yml
-name: CD - Deploy
+name: CD - Demo Locale
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main]
-  workflow_dispatch:  # Permette esecuzione manuale
-
-env:
-  REGISTRY: ghcr.io  # GitHub Container Registry
-  IMAGE_NAME_BACKEND: ${{ github.repository }}-backend
-  IMAGE_NAME_FLASK: ${{ github.repository }}-flask
-  IMAGE_NAME_FRONTEND: ${{ github.repository }}-frontend
+    branches: [main, master]
 
 jobs:
-  deploy:
-    name: Deploy to Server
+  demo:
+    name: CD Pipeline Demo Locale
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
 
-      # Login al Container Registry
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build all images
+        run: |
+          cd backend-spring && docker build -t demo-backend .
+          cd ../backend-flask && docker build -t demo-flask .
+          cd ../frontend-react && docker build -t demo-frontend .
 
-      # Build e push Spring Backend
-      - name: Build and push Spring Backend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend-spring
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
+      - name: Run container test (dry-run)
+        run: |
+          echo "Build completata con successo!"
+          echo "Statistiche:"
+          echo "   - Backend Spring: $(docker images demo-backend --format '{{.Size}}')"
+          echo "   - Flask: $(docker images demo-flask --format '{{.Size}}')"
+          echo "   - Frontend: $(docker images demo-frontend --format '{{.Size}}')"
 
-      # Build e push Flask Backend
-      - name: Build and push Flask Backend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend-flask
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FLASK }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FLASK }}:${{ github.sha }}
+      - name: Log deployment (simulato)
+        run: |
+          echo "========================================="
+          echo "SIMULAZIONE DEPLOYMENT"
+          echo "========================================="
+          echo "Data: $(date)"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo ""
+          echo "In un ambiente reale, qui avverrebbe:"
+          echo "   1. Push delle immagini su Docker Registry"
+          echo "   2. Connessione SSH al server di produzione"
+          echo "   3. Esecuzione di docker-compose pull && up -d"
+          echo "========================================="
 
-      # Build e push Frontend
-      - name: Build and push Frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend-react
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
-
-      # Deploy via SSH
-      - name: Deploy to Production Server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd /opt/nutritionists
-            
-            # Crea file .env se non esiste
-            if [ ! -f .env ]; then
-              cp .env.example .env
-            fi
-            
-            # Aggiorna le immagini
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FLASK }}:latest
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:latest
-            
-            # Ricarica i container
-            docker-compose down
-            docker-compose up -d
-            
-            # Pulisci immagini vecchie
-            docker image prune -f
+      - name: Completion
+        run: echo "CD Pipeline Demo completata con successo!"
