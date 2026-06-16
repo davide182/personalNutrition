@@ -1,4 +1,4 @@
-package com.nutrizionists.demo;
+package com.nutritionists;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
