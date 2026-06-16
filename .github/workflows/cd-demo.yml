@@ -17,7 +17,7 @@ jobs:
         run: |
           cd backend-spring && docker build -t demo-backend .
           cd ../backend-flask && docker build -t demo-flask .
-          cd ../frontend-react && docker build -t demo-frontend .
+          cd ../frontend && docker build -t demo-frontend .
 
       - name: Run container test (dry-run)
         run: |
