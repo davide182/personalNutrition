@@ -126,24 +126,24 @@ const HealthDataPage: React.FC = () => {
 
     setSaving(true);
     try {
-      let response;//
+      let _response;
       
       if (hasData) {
-        response = await api.put('/patient/health-data', {
+        _response = await api.put('/patient/health-data', {
           weight: healthData.weight,
           height: healthData.height,
           allergies: healthData.allergies || '',
           goals: healthData.goals || '',
         });
-        toast.success('Dati aggiornati con successo!');
+        toast.success('Dati aggiornati con successo!', _response.data);
       } else {
-        response = await api.post('/patient/health-data', {
+        _response = await api.post('/patient/health-data', {
           weight: healthData.weight,
           height: healthData.height,
           allergies: healthData.allergies || '',
           goals: healthData.goals || '',
         });
-        toast.success('Dati salvati con successo!');
+        toast.success('Dati salvati con successo!', _response.data);
       }
       
       setHasData(true);
