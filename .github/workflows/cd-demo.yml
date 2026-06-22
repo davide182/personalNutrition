@@ -1,4 +1,4 @@
-name: CD - Demo Locale
+name: CD - Deploy Locale
 
 on:
   workflow_dispatch:
@@ -6,41 +6,50 @@ on:
     branches: [main, master]
 
 jobs:
-  demo:
-    name: CD Pipeline Demo Locale
+  deploy:
+    name: Deploy Locale con Docker Compose
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Build all images
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Pull images from Docker Hub
         run: |
-          cd backend-spring && docker build -t demo-backend .
-          cd ../backend-flask && docker build -t demo-flask .
-          cd ../frontend && docker build -t demo-frontend .
+          echo "📦 Pull immagini da Docker Hub..."
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-backend:latest
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-flask:latest
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-frontend:latest
 
-      - name: Run container test (dry-run)
+      - name: Start containers
         run: |
-          echo "Build completata con successo!"
-          echo "Statistiche:"
-          echo "   - Backend Spring: $(docker images demo-backend --format '{{.Size}}')"
-          echo "   - Flask: $(docker images demo-flask --format '{{.Size}}')"
-          echo "   - Frontend: $(docker images demo-frontend --format '{{.Size}}')"
+          echo "🐳 Avvio container..."
+          docker-compose up -d
+          sleep 10
 
-      - name: Log deployment (simulato)
+      - name: Health check - Spring Boot
+        run: |
+          echo "🏥 Verifica Spring Boot..."
+          curl -f http://localhost:8080/api/health || exit 1
+          echo "✅ Spring Boot OK"
+
+      - name: Health check - Flask
+        run: |
+          echo "🏥 Verifica Flask..."
+          curl -f http://localhost:5000/health || exit 1
+          echo "✅ Flask OK"
+
+      - name: Deployment complete
         run: |
           echo "========================================="
-          echo "SIMULAZIONE DEPLOYMENT"
+          echo "🎉 DEPLOY COMPLETATO CON SUCCESSO!"
           echo "========================================="
-          echo "Data: $(date)"
-          echo "Branch: ${{ github.ref_name }}"
-          echo "Commit: ${{ github.sha }}"
-          echo ""
-          echo "In un ambiente reale, qui avverrebbe:"
-          echo "   1. Push delle immagini su Docker Registry"
-          echo "   2. Connessione SSH al server di produzione"
-          echo "   3. Esecuzione di docker-compose pull && up -d"
+          echo "🔧 API Spring: http://localhost:8080/api"
+          echo "🔧 API Flask: http://localhost:5000"
           echo "========================================="
-
-      - name: Completion
-        run: echo "CD Pipeline Demo completata con successo!"

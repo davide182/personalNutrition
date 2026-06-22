@@ -45,8 +45,8 @@ public class NutritionistController {
             @RequestParam(defaultValue = "999999") double radius) {
 
         log.info("========================================");
-        log.info("🔍🔍🔍 CHIAMATA RICEVUTA a /nutritionists/nearby");
-        log.info("🔍 lat={}, lon={}", lat, lon);
+        log.info(" CHIAMATA RICEVUTA a /nutritionists/nearby");
+        log.info(" lat={}, lon={}", lat, lon);
         log.info("========================================");
         
         // Verifica che l'utente sia autenticato

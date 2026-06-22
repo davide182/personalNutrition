@@ -1,4 +1,3 @@
-// src/pages/ResetPasswordPage.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import api from '../api/axiosConfig';

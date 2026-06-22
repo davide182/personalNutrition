@@ -1,4 +1,3 @@
-// src/components/ui/DisableProfileButton.tsx
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axiosConfig';

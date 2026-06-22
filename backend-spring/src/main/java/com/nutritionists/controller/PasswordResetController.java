@@ -1,4 +1,3 @@
-// com.nutritionists.controller.PasswordResetController.java
 package com.nutritionists.controller;
 
 import com.nutritionists.model.dto.request.ForgotPasswordRequest;

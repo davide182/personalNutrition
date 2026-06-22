@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FakeEmailService {
     
     public void sendRawEmail(String to, String subject, String body) {
-        log.info("📧 ===== FAKE EMAIL (NO Mailtrap) =====");
+        log.info("📧 ===== FAKE EMAIL =====");
         log.info("📧 A: {}", to);
         log.info("📧 Oggetto: {}", subject);
         log.info("📧 Corpo:\n{}", body);

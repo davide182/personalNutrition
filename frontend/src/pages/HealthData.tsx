@@ -1,4 +1,3 @@
-// src/pages/HealthDataPage.tsx
 import { useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
