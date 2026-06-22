@@ -6,9 +6,17 @@ on:
     branches: [main, master]
 
 jobs:
+  wait-for-ci:
+    name: Aspetta che il CI finisca
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aspetta 30 secondi
+        run: sleep 30
+
   deploy:
     name: Deploy Locale con Docker Compose
     runs-on: ubuntu-latest
+    needs: wait-for-ci
 
     steps:
       - name: Checkout repository
@@ -20,18 +28,46 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Pull images from Docker Hub
+      - name: Pull images from Docker Hub (con tentativi)
         run: |
           echo "📦 Pull immagini da Docker Hub..."
-          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-backend:latest
-          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-flask:latest
-          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-frontend:latest
+          
+          # Funzione per tentare il pull più volte
+          pull_with_retry() {
+            local max_attempts=5
+            local attempt=1
+            local image=$1
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "Tentativo $attempt di $max_attempts per $image..."
+              if docker pull $image; then
+                echo "✅ $image scaricata con successo!"
+                return 0
+              fi
+              echo "❌ Tentativo $attempt fallito. Aspetto 10 secondi..."
+              sleep 10
+              attempt=$((attempt + 1))
+            done
+            
+            echo "❌ Impossibile scaricare $image dopo $max_attempts tentativi"
+            return 1
+          }
+          
+          # Prova a scaricare ogni immagine con retry
+          pull_with_retry ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-backend:latest
+          pull_with_retry ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-flask:latest
+          pull_with_retry ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-frontend:latest
 
       - name: Start containers
         run: |
           echo "🐳 Avvio container..."
           docker-compose up -d
           sleep 10
+
+      - name: Check running containers
+        run: |
+          echo "📊 Container in esecuzione:"
+          docker ps
 
       - name: Health check - Spring Boot
         run: |
