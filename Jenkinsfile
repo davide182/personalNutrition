@@ -1,6 +1,3 @@
-// Jenkinsfile - per progetto scolastico
-// Funziona con Jenkins installato localmente
-
 pipeline {
     agent any
 
@@ -10,8 +7,7 @@ pipeline {
     }
 
     environment {
-        // Variabili d'ambiente per i test
-        SPRING_DATASOURCE_URL = 'jdbc:postgresql://localhost:5432/testdb'
+        SPRING_DATASOURCE_URL = 'jdbc:postgresql://localhost:5433/nutritionists_db'
         SPRING_DATASOURCE_USERNAME = 'postgres'
         SPRING_DATASOURCE_PASSWORD = 'postgres'
     }
@@ -21,6 +17,14 @@ pipeline {
             steps {
                 echo '📦 Clonazione repository...'
                 checkout scm
+            }
+        }
+
+        stage('Avvia Database') {
+            steps {
+                echo '🐘 Avvio PostgreSQL e MongoDB...'
+                sh 'docker-compose up -d postgres mongodb'
+                sh 'sleep 10'
             }
         }
 
@@ -43,7 +47,6 @@ pipeline {
                 echo '🐳 Build immagini Docker...'
                 sh 'docker build -t nutritionists-backend:latest ./backend-spring'
                 sh 'docker build -t nutritionists-flask:latest ./backend-flask'
-                sh 'docker build -t nutritionists-frontend:latest ./frontend-react'
             }
         }
 
@@ -61,7 +64,6 @@ pipeline {
                 echo '🏥 Verifica servizi...'
                 sh 'curl -f http://localhost:8080/api/health || exit 1'
                 sh 'curl -f http://localhost:5000/health || exit 1'
-                sh 'curl -f http://localhost || exit 1'
             }
         }
     }
@@ -69,8 +71,8 @@ pipeline {
     post {
         success {
             echo '🎉 Pipeline completata con successo!'
-            echo '🌐 Frontend: http://localhost'
-            echo '🔧 API: http://localhost:8080/api'
+            echo '🔧 API Spring: http://localhost:8080/api'
+            echo '🔧 API Flask: http://localhost:5000'
         }
         failure {
             echo '❌ Pipeline fallita! Controlla i log.'
