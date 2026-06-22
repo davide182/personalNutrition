@@ -32,7 +32,6 @@ jobs:
         run: |
           echo "📦 Pull immagini da Docker Hub..."
           
-          # Funzione per tentare il pull più volte
           pull_with_retry() {
             local max_attempts=5
             local attempt=1
@@ -53,15 +52,21 @@ jobs:
             return 1
           }
           
-          # Prova a scaricare ogni immagine con retry
           pull_with_retry ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-backend:latest
           pull_with_retry ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-flask:latest
           pull_with_retry ${{ secrets.DOCKER_HUB_USERNAME }}/nutritionists-frontend:latest
 
+      - name: Create .env file
+        run: |
+          echo "📄 Creazione .env..."
+          echo "POSTGRES_USER=postgres" >> .env
+          echo "POSTGRES_PASSWORD=postgres" >> .env
+          echo "POSTGRES_DB=nutritionists_db" >> .env
+
       - name: Start containers
         run: |
           echo "🐳 Avvio container..."
-          docker-compose up -d
+          docker compose up -d
           sleep 10
 
       - name: Check running containers
